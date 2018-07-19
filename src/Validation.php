@@ -10,19 +10,20 @@ use validation\Exceptions\InvalidValidationStrategyException;
 class Validation
 {
     /**
+     * @var ValidationStrategyInterface[]
+     */
+    private $strategyList = [];
+
+    /**
+     * @var FixtureStrategyInterface[]
+     */
+    private $fixtureList = [];
+
+    /**
      * @var mixed
      */
     private $subject;
 
-    /**
-     * @var ValidationStrategyInterface
-     */
-    private $validationStrategy;
-
-    /**
-     * @var FixtureStrategyInterface
-     */
-    private $fixtureStrategy;
 
     /**
      * Validation constructor.
@@ -43,7 +44,9 @@ class Validation
         if (!in_array(ValidationStrategyInterface::class, class_implements($validationStrategy))){
             throw new InvalidValidationStrategyException('Validation strategy is null or invalid');
         }
-        $this->validationStrategy = $validationStrategy;
+        $this->strategyList[] = $validationStrategy;
+        $this->fixtureList[] = null;
+
         return $this;
     }
 
@@ -53,7 +56,8 @@ class Validation
      */
     public function fixWith(FixtureStrategyInterface $fixtureStrategy)
     {
-        $this->fixtureStrategy = $fixtureStrategy;
+        $length = count($this->fixtureList);
+        $this->fixtureList[$length-1] = $fixtureStrategy;
         return $this;
     }
 
@@ -62,31 +66,36 @@ class Validation
      */
     public function run()
     {
-        try {
-            $this->doValidation();
-        } catch (\Exception $exception){
-            $this->applyFixtureStrategy($exception);
+        $index = 0;
+        foreach ($this->strategyList as $strategy) {
+            try {
+                $this->doValidation($strategy);
+            } catch (\Exception $exception) {
+                $this->applyFixtureStrategy($exception, $index);
+            }
+            $index++;
         }
     }
 
-    private function doValidation(): void
+    private function doValidation(ValidationStrategyInterface $validationStrategy): void
     {
-        $this->validationStrategy->setValue($this->subject);
-        $this->validationStrategy->validate();
+        $validationStrategy->setValue($this->subject);
+        $validationStrategy->validate();
     }
 
     /**
      * @param \Exception $validationException
+     * @param int $index
      * @throws \Exception
      */
-    private function applyFixtureStrategy(\Exception $validationException): void
+    private function applyFixtureStrategy(\Exception $validationException, int $index): void
     {
-        if (!is_null($this->fixtureStrategy)) {
+        if (!is_null($this->fixtureList[$index])) {
+            $fixtureStrategy = $this->fixtureList[$index];
+                $fixtureStrategy->setValue($this->subject);
+                $fixtureStrategy->fix();
 
-                $this->fixtureStrategy->setValue($this->subject);
-                $this->fixtureStrategy->fix();
-
-                $this->validationStrategy->validate();
+                $this->strategyList[$index]->validate();
         } else{
             throw $validationException;
         }
