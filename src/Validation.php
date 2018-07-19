@@ -5,6 +5,7 @@ namespace validation;
 
 use validation\Custom\FixtureStrategyInterface;
 use validation\Custom\ValidationStrategyInterface;
+use validation\Exceptions\InvalidValidationStrategyException;
 
 class Validation
 {
@@ -35,9 +36,13 @@ class Validation
     /**
      * @param ValidationStrategyInterface $validationStrategy
      * @return Validation
+     * @throws InvalidValidationStrategyException
      */
     public function validateWith(ValidationStrategyInterface $validationStrategy)
     {
+        if (!in_array(ValidationStrategyInterface::class, class_implements($validationStrategy))){
+            throw new InvalidValidationStrategyException('Validation strategy is null or invalid');
+        }
         $this->validationStrategy = $validationStrategy;
         return $this;
     }
@@ -60,7 +65,7 @@ class Validation
         try {
             $this->doValidation();
         } catch (\Exception $exception){
-            $this->applyFixtureStrategy();
+            $this->applyFixtureStrategy($exception);
         }
     }
 
@@ -71,17 +76,19 @@ class Validation
     }
 
     /**
+     * @param \Exception $validationException
      * @throws \Exception
      */
-    private function applyFixtureStrategy(): void
+    private function applyFixtureStrategy(\Exception $validationException): void
     {
         if (!is_null($this->fixtureStrategy)) {
-            try {
+
                 $this->fixtureStrategy->setValue($this->subject);
                 $this->fixtureStrategy->fix();
-            } catch (\Exception $exception) {
-                throw $exception;
-            }
+
+                $this->validationStrategy->validate();
+        } else{
+            throw $validationException;
         }
     }
 
