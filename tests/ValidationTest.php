@@ -257,4 +257,42 @@ class ValidationTest extends TestCase
         // assert
         $this->assertSame($secondExceptionFromValidation, $exceptionResult);
     }
+
+    /**
+     *
+     */
+    public function testValidationWithTwoStrategiesThrowingOneExceptionForEach()
+    {
+        // arrange
+
+        $firstExceptionMessage = 'First exception';
+        $secondExceptionMessage = 'Second exception';
+
+        $firstException = new \Exception($firstExceptionMessage);
+        $firstStrategy = $this->prepareValidationStrategyWithException($firstException);
+
+        $secondException = new \Exception($secondExceptionMessage);
+        $secondStrategy = $this->prepareValidationStrategyWithException($secondException);
+
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+        $exceptionResult = null;
+
+        // act
+        try {
+            $factory->createFor($subject)
+                ->validateWith($firstStrategy)
+                ->validateWith($secondStrategy)
+                ->run();
+        } catch (\Exception $ex){
+            $exceptionResult = $ex;
+        }
+
+        // assert
+        $this->assertContains($firstExceptionMessage, $exceptionResult->getMessage());
+        $this->assertContains($secondExceptionMessage, $exceptionResult->getMessage());
+        var_dump($exceptionResult->getMessage());
+    }
+
+
 }

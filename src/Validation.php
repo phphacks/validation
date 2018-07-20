@@ -66,14 +66,24 @@ class Validation
      */
     public function run()
     {
+        $errorList = [];
+
         $index = 0;
         foreach ($this->strategyList as $strategy) {
             try {
                 $this->doValidation($strategy);
             } catch (\Exception $exception) {
-                $this->applyFixtureStrategy($exception, $index);
+                try {
+                    $this->applyFixtureStrategy($exception, $index);
+                } catch (\Exception $afterFixtureException){
+                    $errorList[] = $afterFixtureException->getMessage();
+                }
             }
             $index++;
+        }
+
+        if (count($errorList) > 0){
+            throw new \Exception(implode("\n", $errorList));
         }
     }
 
