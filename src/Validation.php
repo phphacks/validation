@@ -3,19 +3,20 @@
 namespace validation;
 
 
-use validation\Custom\FixtureStrategyInterface;
+use validation\Custom\AbstractFixtureStrategy;
+use validation\Custom\AbstractValidationStrategy;
 use validation\Custom\ValidationStrategyInterface;
 use validation\Exceptions\InvalidValidationStrategyException;
 
 class Validation
 {
     /**
-     * @var ValidationStrategyInterface[]
+     * @var AbstractValidationStrategy[]
      */
     private $strategyList = [];
 
     /**
-     * @var FixtureStrategyInterface[]
+     * @var AbstractFixtureStrategy[]
      */
     private $fixtureList = [];
 
@@ -35,11 +36,11 @@ class Validation
     }
 
     /**
-     * @param ValidationStrategyInterface $validationStrategy
+     * @param AbstractValidationStrategy $validationStrategy
      * @return Validation
      * @throws InvalidValidationStrategyException
      */
-    public function validateWith(ValidationStrategyInterface $validationStrategy)
+    public function validateWith(AbstractValidationStrategy $validationStrategy)
     {
         if (!in_array(ValidationStrategyInterface::class, class_implements($validationStrategy))){
             throw new InvalidValidationStrategyException('Validation strategy is null or invalid');
@@ -51,10 +52,10 @@ class Validation
     }
 
     /**
-     * @param FixtureStrategyInterface $fixtureStrategy
+     * @param AbstractFixtureStrategy $fixtureStrategy
      * @return $this
      */
-    public function fixWith(FixtureStrategyInterface $fixtureStrategy)
+    public function fixWith(AbstractFixtureStrategy $fixtureStrategy)
     {
         $length = count($this->fixtureList);
         $this->fixtureList[$length-1] = $fixtureStrategy;

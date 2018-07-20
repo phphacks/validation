@@ -5,8 +5,8 @@ namespace Tests;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Tests\Utils\TestEntity;
-use validation\Custom\FixtureStrategyInterface;
-use validation\Custom\ValidationStrategyInterface;
+use validation\Custom\AbstractFixtureStrategy;
+use validation\Custom\AbstractValidationStrategy;
 use validation\ValidationFactory;
 
 class ValidationTest extends TestCase
@@ -14,7 +14,7 @@ class ValidationTest extends TestCase
     private function prepareValidationStrategy(): MockObject
     {
         $validationStrategy = $this
-            ->getMockBuilder(ValidationStrategyInterface::class)
+            ->getMockBuilder(AbstractValidationStrategy::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -32,7 +32,7 @@ class ValidationTest extends TestCase
     private function prepareValidationStrategyWithException(\Exception $exception): MockObject
     {
         $validationStrategy = $this
-            ->getMockBuilder(ValidationStrategyInterface::class)
+            ->getMockBuilder(AbstractValidationStrategy::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -45,7 +45,7 @@ class ValidationTest extends TestCase
     private function prepareValidationStrategyWithExceptionOnFirstCall(\Exception $exception): MockObject
     {
         $validationStrategy = $this
-            ->getMockBuilder(ValidationStrategyInterface::class)
+            ->getMockBuilder(AbstractValidationStrategy::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -64,7 +64,7 @@ class ValidationTest extends TestCase
     private function prepareFixtureStrategyWithException(\Exception $exception): MockObject
     {
         $fixtureStrategy = $this
-            ->getMockBuilder(FixtureStrategyInterface::class)
+            ->getMockBuilder(AbstractFixtureStrategy::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -78,7 +78,7 @@ class ValidationTest extends TestCase
     private function prepareFixtureStrategy(): MockObject
     {
         $fixtureStrategy = $this
-            ->getMockBuilder(FixtureStrategyInterface::class)
+            ->getMockBuilder(AbstractFixtureStrategy::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -92,7 +92,7 @@ class ValidationTest extends TestCase
     private function prepareFixtureStrategyWithoutException(): MockObject
     {
         $fixtureStrategy = $this
-            ->getMockBuilder(FixtureStrategyInterface::class)
+            ->getMockBuilder(AbstractFixtureStrategy::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -110,7 +110,7 @@ class ValidationTest extends TestCase
     private function prepareValidationStrategyWithTwoExecutionsAndOneExceptionForEach(\Exception $firstException, \Exception $secondException): MockObject
     {
         $validationStrategy = $this
-            ->getMockBuilder(ValidationStrategyInterface::class)
+            ->getMockBuilder(AbstractValidationStrategy::class)
             ->disableOriginalConstructor()
             ->getMock();
 
@@ -177,7 +177,8 @@ class ValidationTest extends TestCase
     public function testWhenValidationWithoutFixtureStrategyIsMadeThenFailsMustThrowsExceptionFromValidation()
     {
         // arrange
-        $exceptionFromValidation = new \Exception();
+        $message = 'This message';
+        $exceptionFromValidation = new \Exception($message);
 
         $validationStrategy = $this->prepareValidationStrategyWithException($exceptionFromValidation);
 
@@ -197,16 +198,18 @@ class ValidationTest extends TestCase
         }
 
         // assert
-        $this->assertSame($exceptionFromValidation, $exceptionResult);
+        $this->assertContains($message, $exceptionResult->getMessage());
     }
 
     public function testWhenValidationWithFixtureStrategyIsMadeThenFixtureFailsMustThrowsExceptionFromFixture()
     {
         // arrange
-        $exceptionFromValidation = new \Exception();
+        $messageFromValidation = 'From validation';
+        $exceptionFromValidation = new \Exception($messageFromValidation);
         $validationStrategy = $this->prepareValidationStrategyWithException($exceptionFromValidation);
 
-        $exceptionFromFixture = new \Exception();
+        $messageFromFixture = 'From fixture';
+        $exceptionFromFixture = new \Exception($messageFromFixture);
         $fixtureStrategy = $this->prepareFixtureStrategyWithException($exceptionFromFixture);
 
         $subject = new TestEntity();
@@ -226,14 +229,17 @@ class ValidationTest extends TestCase
         }
 
         // assert
-        $this->assertSame($exceptionFromFixture, $exceptionResult);
+        $this->assertContains($messageFromFixture, $exceptionResult->getMessage());
+        $this->assertNotContains($messageFromValidation, $exceptionResult->getMessage());
     }
 
-    public function testWhenValidationWithFixtureStrategyIsMadeThenValidationFailsAndFixtureDontWorkMustThrowsExceptionFromSecondValidation()
+    public function testWhenValidationWithFixtureStrategyIsMadeThenValidationFailsAndFixtureDontWorkMustThrowsExceptionFromSecondValidationCall()
     {
         // arrange
-        $firstExceptionFromValidation = new \Exception('First exception');
-        $secondExceptionFromValidation = new \Exception('Second exception');
+        $firstExceptionMessage = 'First exception';
+        $firstExceptionFromValidation = new \Exception($firstExceptionMessage);
+        $secondExceptionMessage = 'Second exception';
+        $secondExceptionFromValidation = new \Exception($secondExceptionMessage);
         $validationStrategy = $this->prepareValidationStrategyWithTwoExecutionsAndOneExceptionForEach($firstExceptionFromValidation, $secondExceptionFromValidation);
 
         $fixtureStrategy = $this->prepareFixtureStrategyWithoutException();
@@ -255,7 +261,9 @@ class ValidationTest extends TestCase
         }
 
         // assert
-        $this->assertSame($secondExceptionFromValidation, $exceptionResult);
+        $this->assertContains($secondExceptionMessage, $exceptionResult->getMessage());
+        $this->assertNotContains($firstExceptionMessage, $exceptionResult->getMessage());
+        //$this->assertSame($secondExceptionFromValidation, $exceptionResult);
     }
 
     /**
