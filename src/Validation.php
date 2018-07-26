@@ -2,11 +2,11 @@
 
 namespace validation;
 
-
 use validation\Custom\AbstractFixtureStrategy;
 use validation\Custom\AbstractValidationStrategy;
 use validation\Custom\ValidationStrategyInterface;
 use validation\Exceptions\InvalidValidationStrategyException;
+use validation\Exceptions\ValidationException;
 
 class Validation
 {
@@ -25,6 +25,10 @@ class Validation
      */
     private $subject;
 
+    /**
+     * @var \Exception
+     */
+    private $exception;
 
     /**
      * Validation constructor.
@@ -33,6 +37,13 @@ class Validation
     public function __construct($subject)
     {
         $this->subject = $subject;
+    }
+
+    public function throws($exception)
+    {
+        $this->exception = $exception;
+
+        return $this;
     }
 
     /**
@@ -84,7 +95,12 @@ class Validation
         }
 
         if (count($errorList) > 0){
-            throw new \Exception(implode("\n", $errorList));
+            if (empty($this->exception)) {
+                throw new ValidationException(ValidationException::class . "\n" . implode("\n", $errorList));
+            }
+            else {
+                throw new $this->exception($this->exception . "\n" .implode("\n", $errorList));
+            }
         }
     }
 

@@ -4,6 +4,7 @@ namespace Tests;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Tests\Utils\MyExceptionClass;
 use Tests\Utils\TestEntity;
 use validation\Custom\AbstractFixtureStrategy;
 use validation\Custom\AbstractValidationStrategy;
@@ -198,6 +199,7 @@ class ValidationTest extends TestCase
         }
 
         // assert
+
         $this->assertContains($message, $exceptionResult->getMessage());
     }
 
@@ -302,5 +304,29 @@ class ValidationTest extends TestCase
         var_dump($exceptionResult->getMessage());
     }
 
+    public function testIfValidationFailsAnThrowsACustomExceptionPassedByThrowsMethod()
+    {
+        // arrange
+        $firstExceptionMessage = 'Custom exception';
 
+        $firstException = new MyExceptionClass($firstExceptionMessage);
+        $firstStrategy = $this->prepareValidationStrategyWithException($firstException);
+
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+        $exceptionResult = null;
+
+        // act
+        try {
+            $factory->createFor($subject)
+                ->validateWith($firstStrategy)
+                ->throws(MyExceptionClass::class)
+                ->run();
+        } catch (\Exception $ex){
+            $exceptionResult = $ex;
+        }
+
+        // assert
+        $this->assertContains(MyExceptionClass::class, $exceptionResult->getMessage());
+    }
 }
