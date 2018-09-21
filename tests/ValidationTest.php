@@ -327,6 +327,6 @@ class ValidationTest extends TestCase
         }
 
         // assert
-        $this->assertContains(MyExceptionClass::class, $exceptionResult->getMessage());
+        $this->assertContains($firstExceptionMessage, $exceptionResult->getMessage());
     }
 }

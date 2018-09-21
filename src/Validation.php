@@ -96,10 +96,10 @@ class Validation
 
         if (count($errorList) > 0){
             if (empty($this->exception)) {
-                throw new ValidationException(ValidationException::class . "\n" . implode("\n", $errorList));
+                throw new ValidationException(implode("\n", $errorList));
             }
             else {
-                throw new $this->exception($this->exception . "\n" .implode("\n", $errorList));
+                throw new $this->exception(implode("\n", $errorList));
             }
         }
     }
