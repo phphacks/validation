@@ -161,7 +161,7 @@ class Validation
         return $this;
     }
 
-    public function validateNotBlank(strint $property, string $template = '')
+    public function validateNotBlank(string $property, string $template = '')
     {
         if (is_null($property) || $property == ''){
             throw new \InvalidArgumentException('Invalid property for ValidateNotBlank');
