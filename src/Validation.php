@@ -8,6 +8,7 @@ use validation\Custom\AbstractValidationStrategy;
 use validation\Custom\ValidationStrategyInterface;
 use validation\Exceptions\InvalidValidationStrategyException;
 use validation\Exceptions\ValidationException;
+use validation\stock\Common\NotBlankStockStrategy;
 use validation\stock\DateTime\StartAndEndDateStockStrategy;
 use validation\stock\DateTime\ValidDateTimeStockStrategy;
 use validation\stock\Integer\IntTypeStockStrategy;
@@ -155,6 +156,18 @@ class Validation
         }
 
         $this->strategyList[] = new MinLengthStockStrategy($property, $minLength, $template);
+        $this->fixtureList[] = null;
+
+        return $this;
+    }
+
+    public function validateNotBlank(strint $property, string $template = '')
+    {
+        if (is_null($property) || $property == ''){
+            throw new \InvalidArgumentException('Invalid property for ValidateNotBlank');
+        }
+
+        $this->strategyList[] = new NotBlankStockStrategy($property, $template);
         $this->fixtureList[] = null;
 
         return $this;
