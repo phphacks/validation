@@ -31,7 +31,7 @@ final class MaxLengthStockStrategy extends AbstractStockValidationStrategy
 
     public function validate()
     {
-        Validator::attribute($this->property, Validator::length([], $this->maxLength))
+        Validator::attribute($this->property, Validator::length(null, $this->maxLength))
             ->setTemplate($this->template)
             ->assert($this->value);
     }

@@ -29,7 +29,7 @@ final class MinLengthStockStrategy extends AbstractStockValidationStrategy
 
     public function validate()
     {
-        Validator::attribute($this->property, Validator::length([$this->minLength], []))
+        Validator::attribute($this->property, Validator::length($this->minLength, null))
             ->setTemplate($this->template)
             ->assert($this->value);
     }

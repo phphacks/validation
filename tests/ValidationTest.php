@@ -654,4 +654,34 @@ class ValidationTest extends TestCase
 
         // assert
     }
+
+    public function testIfValidateNotBlankWithInvalidPropertyParameterThrowsInvalidArgumentException()
+    {
+        // arrange
+        $this->expectException(\InvalidArgumentException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+
+        // act
+        $factory->createFor($subject)
+            ->validateNotBlank('')
+            ->run();
+
+        // assert
+    }
+
+    public function testIfValidateNotBlankWithInvalidValueThrowsValidationException()
+    {
+        // arrange
+        $this->expectException(ValidationException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+
+        // act
+        $factory->createFor($subject)
+            ->validateNotBlank('name')
+            ->run();
+
+        // assert
+    }
 }
