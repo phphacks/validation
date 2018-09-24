@@ -8,6 +8,8 @@ use Tests\Utils\MyExceptionClass;
 use Tests\Utils\TestEntity;
 use validation\Custom\AbstractFixtureStrategy;
 use validation\Custom\AbstractValidationStrategy;
+use validation\Exceptions\ValidationException;
+use validation\stock\DateTime\StartAndEndDateStockStrategy;
 use validation\ValidationFactory;
 
 class ValidationTest extends TestCase
@@ -328,5 +330,328 @@ class ValidationTest extends TestCase
 
         // assert
         $this->assertContains($firstExceptionMessage, $exceptionResult->getMessage());
+    }
+
+    public function testIfValidateStartAndEndDateStockStrategyHasInvalidParametersThrowsInvalidArgumentException()
+    {
+        // arrange
+        $this->expectException(\InvalidArgumentException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+
+
+        // act
+        $factory->createFor($subject)
+            ->validateStartEndEndDate('', 'endDate', 'Test Message')
+            ->run();
+
+        // assert
+    }
+
+    public function testIfValidateStartAndEndDateStockStrategyWithWrongDatesThrowsValidationException()
+    {
+        // arrange
+        $this->expectException(ValidationException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+
+        $subject->setStartDate('2018-09-23 12:00:00');
+        $subject->setEndDate('2018-09-23 11:00:00');
+
+        // act
+        $factory->createFor($subject)
+            ->validateStartEndEndDate('startDate', 'endDate', 'Test Message')
+            ->run();
+
+        // assert
+    }
+
+    public function testIfValidateStartAndEndDateStockStrategyWithWrongDatesThrowsValidationExceptionWithCustomMessage()
+    {
+        // arrange
+        $customMessage = 'Test Message';
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+        $exceptionResult = null;
+
+        $subject->setStartDate('2018-09-23 12:00:00');
+        $subject->setEndDate('2018-09-23 11:00:00');
+
+        // act
+        try {
+            $factory->createFor($subject)
+                ->validateStartEndEndDate('startDate', 'endDate', $customMessage)
+                ->run();
+        }
+        catch (\Exception $ex) {
+            $exceptionResult = $ex;
+        }
+
+        // assert
+        $this->assertEquals($customMessage, $exceptionResult->getMessage());
+    }
+
+    public function testIfValidateStartAndEndDateStockStrategyWithWrongDatesThrowsValidationExceptionWithoutCustomMessage()
+    {
+        // arrange
+        $customMessage = 'Test Message';
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+        $exceptionResult = null;
+
+        $subject->setStartDate('2018-09-23 12:00:00');
+        $subject->setEndDate('2018-09-23 11:00:00');
+
+        // act
+        try {
+            $factory->createFor($subject)
+                ->validateStartEndEndDate('startDate', 'endDate')
+                ->run();
+        }
+        catch (\Exception $ex) {
+            $exceptionResult = $ex;
+        }
+
+        // assert
+        $this->assertNotEquals($customMessage, $exceptionResult->getMessage());
+    }
+
+
+    public function testIfValidateDateTimeWithInvalidParametersThrowsInvalidArgumentException()
+    {
+        // arrange
+        $this->expectException(\InvalidArgumentException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+
+
+        // act
+        $factory->createFor($subject)
+            ->validateDateTime('', 'Test Message')
+            ->run();
+
+        // assert
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testIfValidateDateTimeWithInvalidDateThrowsValidationException()
+    {
+        // arrange
+        $this->expectException(ValidationException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+
+        $subject->setStartDate('-09-23 12:00:00');
+
+        // act
+        $factory->createFor($subject)
+            ->validateDateTime('startDate','Test Message')
+            ->run();
+
+        // assert
+    }
+
+    public function testIfValidateDateTimeWithWrongDateThrowsValidationExceptionWithCustomMessage()
+    {
+        // arrange
+        $customMessage = 'Test Message';
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+        $exceptionResult = null;
+
+        $subject->setStartDate('-09-23 12:00:00');
+
+        // act
+        try {
+            $factory->createFor($subject)
+                ->validateDateTime('startDate', $customMessage)
+                ->run();
+        }
+        catch (\Exception $ex) {
+            $exceptionResult = $ex;
+        }
+
+        // assert
+        $this->assertEquals($customMessage, $exceptionResult->getMessage());
+    }
+
+    public function testIfValidateDateTimeWithWrongDateThrowsValidationExceptionWithoutCustomMessage()
+    {
+        // arrange
+        $customMessage = 'Test Message';
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+        $exceptionResult = null;
+
+        $subject->setStartDate('-23 12:00:00');
+
+        // act
+        try {
+            $factory->createFor($subject)
+                ->validateDateTime('startDate')
+                ->run();
+        }
+        catch (\Exception $ex) {
+            $exceptionResult = $ex;
+        }
+
+        // assert
+        $this->assertNotEquals($customMessage, $exceptionResult->getMessage());
+    }
+
+    public function testIfValidateRangeWithInvalidPropertyParameterThrowsInvalidArgumentException()
+    {
+        // arrange
+        $this->expectException(\InvalidArgumentException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+
+
+        // act
+        $factory->createFor($subject)
+            ->validateRange('', 0, 100, 'Test Message')
+            ->run();
+
+        // assert
+    }
+
+    public function testIfValidateRangeWithMinValueGraterThanMaxValueThrowsValidationException()
+    {
+        // arrange
+        $this->expectException(ValidationException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+
+        // act
+        $factory->createFor($subject)
+            ->validateRange('someIntValue', 1000, 100, 'Test Message')
+            ->run();
+
+        // assert
+    }
+
+    public function testIfValidateMaxLengthWithInvalidPropertyParameterThrowsInvalidArgumentException()
+    {
+        // arrange
+        $this->expectException(\InvalidArgumentException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+
+        // act
+        $factory->createFor($subject)
+            ->validateMaxLength('', 3)
+            ->run();
+
+        // assert
+    }
+
+    public function testIfValidateMaxLengthWithInvalidMaxLengthParameterThrowsInvalidArgumentException()
+    {
+        // arrange
+        $this->expectException(\InvalidArgumentException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+
+        // act
+        $factory->createFor($subject)
+            ->validateMaxLength('name', 0)
+            ->run();
+
+        // assert
+    }
+
+    public function testIfValidateMaxLengthWithStringThatExceedsMaxLengthParameterThrowsValidationException()
+    {
+        // arrange
+        $this->expectException(ValidationException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+        $subject->setName('Nome maior que 5');
+
+        // act
+        $factory->createFor($subject)
+            ->validateMaxLength('name', 5)
+            ->run();
+
+        // assert
+    }
+
+    public function testIfValidateMinLengthWithInvalidPropertyParameterThrowsInvalidArgumentException()
+    {
+        // arrange
+        $this->expectException(\InvalidArgumentException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+
+        // act
+        $factory->createFor($subject)
+            ->validateMinLength('', 3)
+            ->run();
+
+        // assert
+    }
+
+    public function testIfValidateMinLengthWithInvalidMaxLengthParameterThrowsInvalidArgumentException()
+    {
+        // arrange
+        $this->expectException(\InvalidArgumentException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+
+        // act
+        $factory->createFor($subject)
+            ->validateMinLength('name', 0)
+            ->run();
+
+        // assert
+    }
+
+    public function testIfValidateMinLengthWithStringThatExceedsMaxLengthParameterThrowsValidationException()
+    {
+        // arrange
+        $this->expectException(ValidationException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+        $subject->setName('Menor que 15');
+
+        // act
+        $factory->createFor($subject)
+            ->validateMinLength('name', 15)
+            ->run();
+
+        // assert
+    }
+
+    public function testIfValidateIntTypeWithInvalidPropertyParameterThrowsInvalidArgumentException()
+    {
+        // arrange
+        $this->expectException(\InvalidArgumentException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+
+        // act
+        $factory->createFor($subject)
+            ->validateIntType('')
+            ->run();
+
+        // assert
+    }
+
+    public function testIfValidateIntTypeWithInvalidValueThrowsValidationException()
+    {
+        // arrange
+        $this->expectException(ValidationException::class);
+        $subject = new TestEntity();
+        $factory = new ValidationFactory();
+        $subject->setId('a');
+
+        // act
+        $factory->createFor($subject)
+            ->validateIntType('id')
+            ->run();
+
+        // assert
     }
 }
